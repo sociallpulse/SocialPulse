@@ -217,7 +217,7 @@ export const AdminDashboard: React.FC = () => {
                     پایش لحظه‌ای پردازش
                   </h3>
                   <div className="space-y-6 relative before:absolute before:right-[15px] before:top-2 before:bottom-2 before:w-0.5 before:bg-slate-100">
-                    {recentSubmissions.map((sub, idx) => (
+                    {recentSubmissions.map((sub) => (
                       <div key={sub.id} className="relative pr-10">
                         <div className="absolute right-0 top-1 w-8 h-8 rounded-full bg-white border-4 border-slate-50 flex items-center justify-center z-10 shadow-sm">
                           <div className="w-2 h-2 rounded-full bg-indigo-500"></div>
