@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabase';
-import { Users, Image as ImageIcon, Activity, Search, ExternalLink, LogOut, TrendingUp, RefreshCw } from 'lucide-react';
+import { Users, Image as ImageIcon, Activity, Search, ExternalLink, LogOut, TrendingUp, RefreshCw, Loader2 } from 'lucide-react';
 import type { Database } from '../../types/database.types';
 
 type Profile = Database['public']['Tables']['instagram_profiles']['Row'];
