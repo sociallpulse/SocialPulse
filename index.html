@@ -5,10 +5,145 @@
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>SocialPulse AI | پلتفرم هوشمند رصد</title>
+    
+    <!-- استایل‌های Splash Screen برای بارگذاری اولیه -->
+    <style>
+      :root {
+        --primary: #9333ea;
+        --secondary: #4f46e5;
+        --bg: #0f172a;
+      }
+      
+      body, html {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+        background-color: var(--bg);
+        overflow: hidden;
+        font-family: system-ui, -apple-system, sans-serif;
+      }
+
+      #initial-loader {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        transition: opacity 0.5s ease-out, visibility 0.5s;
+      }
+
+      .glow-bg {
+        position: absolute;
+        width: 300px;
+        height: 300px;
+        background: radial-gradient(circle, rgba(147, 51, 234, 0.2) 0%, rgba(15, 23, 42, 0) 70%);
+        border-radius: 50%;
+        filter: blur(40px);
+        animation: pulse 3s infinite ease-in-out;
+      }
+
+      .loader-content {
+        position: relative;
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 20px;
+      }
+
+      .logo-icon {
+        width: 64px;
+        height: 64px;
+        background: linear-gradient(135deg, var(--primary), var(--secondary));
+        border-radius: 18px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 10px 25px -5px rgba(147, 51, 234, 0.5);
+        animation: rotate 2s infinite cubic-bezier(0.68, -0.55, 0.27, 1.55);
+      }
+
+      .logo-icon svg {
+        width: 32px;
+        height: 32px;
+        color: white;
+      }
+
+      .loader-text {
+        color: white;
+        font-size: 1.25rem;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+        margin-top: 10px;
+      }
+
+      .loader-bar {
+        width: 150px;
+        height: 4px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+        overflow: hidden;
+        position: relative;
+      }
+
+      .loader-bar::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, var(--primary), transparent);
+        animation: loading 1.5s infinite linear;
+      }
+
+      @keyframes pulse {
+        0%, 100% { transform: scale(1); opacity: 0.2; }
+        50% { transform: scale(1.5); opacity: 0.4; }
+      }
+
+      @keyframes rotate {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+
+      @keyframes loading {
+        0% { left: -100%; }
+        100% { left: 100%; }
+      }
+    </style>
   </head>
   <body>
+    <!-- Splash Screen (قبل از لود شدن React نمایش داده می‌شود) -->
+    <div id="initial-loader">
+      <div class="glow-bg"></div>
+      <div class="loader-content">
+        <div class="logo-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
+          </svg>
+        </div>
+        <div class="loader-text">SocialPulse AI</div>
+        <div class="loader-bar"></div>
+      </div>
+    </div>
+
     <div id="root"></div>
-    <!-- آدرس اسکریپت اصلی باید دقیق باشد -->
+    
     <script type="module" src="/src/main.tsx"></script>
+
+    <!-- اسکریپت حذف خودکار Loader پس از آماده شدن React -->
+    <script>
+      window.addEventListener('load', () => {
+        const loader = document.getElementById('initial-loader');
+        setTimeout(() => {
+          loader.style.opacity = '0';
+          loader.style.visibility = 'hidden';
+        }, 800);
+      });
+    </script>
   </body>
 </html>
