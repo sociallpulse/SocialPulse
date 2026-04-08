@@ -5,7 +5,6 @@ import {
   Image as ImageIcon, 
   Activity, 
   Search, 
-  ExternalLink, 
   LogOut, 
   TrendingUp, 
   RefreshCw, 
@@ -21,9 +20,9 @@ import {
   Bell,
   Cpu,
   BrainCircuit,
-  Calendar,
   Layers,
-  MoreVertical
+  MoreVertical,
+  Zap
 } from 'lucide-react';
 import type { Database as DBTypes } from '../../types/database.types';
 
@@ -443,10 +442,3 @@ export const AdminDashboard: React.FC = () => {
     </div>
   );
 };
-
-// کامپوننت کمکی آیکون صاعقه
-const Zap = ({ className }: { className?: string }) => (
-  <svg className={className} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
-  </svg>
-);
