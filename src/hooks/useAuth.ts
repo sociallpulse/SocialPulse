@@ -51,10 +51,12 @@ export const useAuth = () => {
         .eq('user_id', currentUser.id)
         .single();
 
-      if (error || !data) {
-        setRole('observer'); // نقش پیش‌فرض در صورت نبود رکورد
+      // استفاده از casting به any برای عبور از محدودیت تایپ‌اسکریپت در زمان بیلد
+      if (data && !error) {
+        const userRole = (data as any).role;
+        setRole(userRole as 'admin' | 'observer');
       } else {
-        setRole(data.role as 'admin' | 'observer');
+        setRole('observer'); // نقش پیش‌فرض در صورت نبود رکورد یا خطا
       }
     } catch (err) {
       console.error("Error fetching user role:", err);
