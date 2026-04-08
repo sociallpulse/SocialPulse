@@ -10,8 +10,6 @@ import {
   RefreshCw, 
   Loader2, 
   ShieldCheck, 
-  Database, 
-  AlertCircle,
   BarChart3,
   Filter,
   Download,
