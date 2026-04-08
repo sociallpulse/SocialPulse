@@ -34,7 +34,8 @@ export const useAuth = () => {
         .eq('user_id', userId)
         .single();
         
-      if (!error && data) setRole(data.role as 'admin' | 'observer');
+      // رفع خطای never با استفاده از type assertion
+      if (!error && data) setRole((data as any).role as 'admin' | 'observer');
       else setRole('observer');
     } catch (err) {
       setRole('observer');
