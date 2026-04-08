@@ -8,16 +8,24 @@ export const useAuth = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // بررسی وضعیت نشست فعلی هنگام بارگذاری اولیه
     supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-      if (session?.user) checkUserRole(session.user);
-      else setLoading(false);
+      const currentUser = session?.user ?? null;
+      setUser(currentUser);
+      if (currentUser) {
+        checkUserRole(currentUser);
+      } else {
+        setLoading(false);
+      }
     });
 
+    // گوش دادن به تغییرات وضعیت احراز هویت (Login/Logout)
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-      if (session?.user) checkUserRole(session.user);
-      else {
+      const currentUser = session?.user ?? null;
+      setUser(currentUser);
+      if (currentUser) {
+        checkUserRole(currentUser);
+      } else {
         setRole(null);
         setLoading(false);
       }
@@ -28,22 +36,28 @@ export const useAuth = () => {
 
   const checkUserRole = async (currentUser: User) => {
     try {
-      // ۱. اگر کاربر بدون رمز (ناشناس) وارد شده باشد، قطعا رصدگر است
+      // منطق ویژه برای "ورود سریع" (فقط برای فاز توسعه و تست)
       if (currentUser.is_anonymous) {
-        setRole('observer');
+        const testRole = localStorage.getItem('test_role') as 'admin' | 'observer';
+        setRole(testRole || 'observer');
+        setLoading(false);
         return;
       }
 
-      // ۲. اگر با ایمیل وارد شده، نقش او را از دیتابیس می‌گیریم
+      // منطق ورود رسمی (جستجو در دیتابیس)
       const { data, error } = await supabase
         .from('user_roles')
         .select('role')
         .eq('user_id', currentUser.id)
         .single();
-        
-      if (!error && data) setRole((data as any).role as 'admin' | 'observer');
-      else setRole('observer'); // پیش‌فرض ایمنی
+
+      if (error || !data) {
+        setRole('observer'); // نقش پیش‌فرض در صورت نبود رکورد
+      } else {
+        setRole(data.role as 'admin' | 'observer');
+      }
     } catch (err) {
+      console.error("Error fetching user role:", err);
       setRole('observer');
     } finally {
       setLoading(false);
