@@ -10,13 +10,13 @@ export const useAuth = () => {
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
-      if (session?.user) checkUserRole(session.user.id);
+      if (session?.user) checkUserRole(session.user);
       else setLoading(false);
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
-      if (session?.user) checkUserRole(session.user.id);
+      if (session?.user) checkUserRole(session.user);
       else {
         setRole(null);
         setLoading(false);
@@ -26,17 +26,23 @@ export const useAuth = () => {
     return () => subscription.unsubscribe();
   }, []);
 
-  const checkUserRole = async (userId: string) => {
+  const checkUserRole = async (currentUser: User) => {
     try {
+      // ۱. اگر کاربر بدون رمز (ناشناس) وارد شده باشد، قطعا رصدگر است
+      if (currentUser.is_anonymous) {
+        setRole('observer');
+        return;
+      }
+
+      // ۲. اگر با ایمیل وارد شده، نقش او را از دیتابیس می‌گیریم
       const { data, error } = await supabase
         .from('user_roles')
         .select('role')
-        .eq('user_id', userId)
+        .eq('user_id', currentUser.id)
         .single();
         
-      // رفع خطای never با استفاده از type assertion
       if (!error && data) setRole((data as any).role as 'admin' | 'observer');
-      else setRole('observer');
+      else setRole('observer'); // پیش‌فرض ایمنی
     } catch (err) {
       setRole('observer');
     } finally {
