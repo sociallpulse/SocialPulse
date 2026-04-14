@@ -217,7 +217,6 @@ export const LoginPage: React.FC = () => {
               )}
             </button>
           </form>
-
         </div>
 
         {/* فوتر کپی‌رایت / لاگ‌سیس */}
