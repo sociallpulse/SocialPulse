@@ -1,8 +1,5 @@
 import { useState } from 'react';
 import { supabase } from '../lib/supabase';
-import type { Database } from '../types/database.types';
-
-type Submission = Database['public']['Tables']['submissions']['Row'];
 
 export const useSubmissions = () => {
   const [isUploading, setIsUploading] = useState(false);
@@ -30,8 +27,8 @@ export const useSubmissions = () => {
         const base64Data = await fileToBase64(files[i]);
         
         // ارسال مستقیم به دیتابیس با وضعیت pending جهت پردازش در پس‌زمینه
-        const { error: insertError } = await supabase
-          .from('submissions')
+        // تبدیل کل تابع from به any برای رفع قطعی خطای never در تایپ‌اسکریپت Vercel
+        const { error: insertError } = await (supabase.from('submissions') as any)
           .insert([{
             observer_id: observerId,
             image_path: 'BKG_PROCESS', 

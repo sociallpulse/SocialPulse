@@ -48,8 +48,8 @@ export const useAuth = () => {
         .single();
 
       if (data && !error) {
-        // تایپ‌اسکریپت حالا به کمک فایل database.types.ts مقادیر را می‌شناسد و نیازی به any نیست
-        setRole(data.role);
+        // استفاده از any و cast کردن برای رفع خطای Property 'role' does not exist on type 'never'
+        setRole((data as any).role as 'admin' | 'observer');
       } else {
         setRole('observer'); 
       }
