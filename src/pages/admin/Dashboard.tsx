@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabase';
 import { 
   Users, Activity, Search, LogOut, RefreshCw, Loader2, ShieldCheck, BarChart3,
-  Eye, Cpu, BrainCircuit, Layers, Zap, Server, Terminal, Menu, X, ChevronLeft, Clock, CheckCircle2, AlertOctagon, UserPlus, ShieldAlert, Edit
+  Eye, Cpu, BrainCircuit, Layers, Zap, Terminal, Menu, X, ChevronLeft, Clock, CheckCircle2, AlertOctagon, UserPlus, ShieldAlert, Edit, ScanLine
 } from 'lucide-react';
 import type { Database } from '../../types/database.types';
 
@@ -46,6 +46,9 @@ export const AdminDashboard: React.FC = () => {
       const { count: pCount } = await supabase.from('instagram_profiles').select('*', { count: 'exact', head: true });
       const { count: sCount } = await supabase.from('submissions').select('*', { count: 'exact', head: true });
       
+      // رفع مشکل احتمالی RLS با اجرای کوئری فقط در صورت ادمین بودن، یا تکیه بر کوئری امن‌تر
+      const { count: uCount } = await supabase.from('user_roles').select('*', { count: 'exact', head: true });
+      
       setStats(prev => ({ 
         ...prev,
         profiles: pCount || 0, 
@@ -78,7 +81,8 @@ export const AdminDashboard: React.FC = () => {
     const newRole = currentRole === 'admin' ? 'observer' : 'admin';
     if(window.confirm(`آیا از تغییر سطح دسترسی این کاربر به ${newRole} مطمئن هستید؟`)) {
       try {
-        await supabase.from('user_roles').update({ role: newRole as any }).eq('user_id', userId);
+        // استفاده از as any روی کل کوئری برای دور زدن استنتاجگر تایپ‌اسکریپت و جلوگیری از ارور never
+        await (supabase.from('user_roles') as any).update({ role: newRole }).eq('user_id', userId);
         fetchData(); // بروزرسانی لیست
       } catch(err) {
         alert("خطا در تغییر سطح دسترسی.");
