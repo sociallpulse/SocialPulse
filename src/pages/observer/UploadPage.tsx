@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
-import { Upload, Loader2, CheckCircle, AlertCircle, LogOut, ScanLine, FileImage, Activity } from 'lucide-react';
+import { Upload, CheckCircle, AlertCircle, LogOut, ScanLine, FileImage, Activity } from 'lucide-react';
 import { useSubmissions } from '../../hooks/useSubmissions';
 
 export const UploadPage: React.FC = () => {
@@ -11,12 +11,11 @@ export const UploadPage: React.FC = () => {
   
   useEffect(() => {
     supabase.auth.getSession().then(({data}) => {
-      // هدایت به صفحه ورود در صورت نبود کاربر
-      if (!data.session?.user) {
-         window.location.reload();
-         return;
+      // فقط در صورتی که کاربر وجود داشت آیدی را ست کن
+      // مدیریت خروج کاربر به عهده کامپوننت اصلی (App.tsx) است
+      if (data.session?.user) {
+         setUserId(data.session.user.id);
       }
-      setUserId(data.session.user.id);
     });
   }, []);
 

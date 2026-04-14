@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabase';
 import { 
-  Users, Image as ImageIcon, Activity, Search, LogOut, TrendingUp, RefreshCw, Loader2, ShieldCheck, BarChart3,
-  Filter, Download, Eye, Settings, Bell, Cpu, BrainCircuit, Layers, MoreVertical, Zap, ShieldAlert, Server, Terminal, PieChart, Menu, X, ChevronLeft, Clock, CheckCircle2, AlertOctagon
+  Users, Image as ImageIcon, Activity, Search, LogOut, RefreshCw, Loader2, ShieldCheck, BarChart3,
+  Eye, Cpu, BrainCircuit, Layers, Zap, Server, Terminal, Menu, X, ChevronLeft, Clock, CheckCircle2, AlertOctagon
 } from 'lucide-react';
 import type { Database } from '../../types/database.types';
 
