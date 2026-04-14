@@ -1,6 +1,10 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
-import { Upload, CheckCircle, AlertCircle, LogOut, ScanLine, FileImage, Activity, Clock, Loader2, CheckCircle2, AlertOctagon, RefreshCw } from 'lucide-react';
+import { 
+  Upload, CheckCircle, AlertCircle, LogOut, ScanLine, FileImage, 
+  Activity, Clock, Loader2, CheckCircle2, AlertOctagon, RefreshCw, 
+  User, X, Mail, Hash, Phone, Lock, Save 
+} from 'lucide-react';
 import { useSubmissions } from '../../hooks/useSubmissions';
 import type { Database } from '../../types/database.types';
 
@@ -13,18 +17,36 @@ export const UploadPage: React.FC = () => {
   const [myHistory, setMyHistory] = useState<Submission[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(true);
   
+  // وضعیت‌های مربوط به پنل حساب کاربری
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
+  const [profileMsg, setProfileMsg] = useState({ type: '', text: '' });
+  const [profileData, setProfileData] = useState({
+    email: '',
+    fullName: '',
+    phone: '',
+    personnelCode: '',
+  });
+  const [newPassword, setNewPassword] = useState('');
+
   const { uploadAndProcessMultiple, isUploading, error, progress } = useSubmissions();
   
-  // ۱. دریافت آیدی کاربر
+  // ۱. دریافت آیدی و اطلاعات متادیتا کاربر
   useEffect(() => {
     supabase.auth.getSession().then(({data}) => {
       if (data.session?.user) {
          setUserId(data.session.user.id);
+         setProfileData({
+           email: data.session.user.email || '',
+           fullName: data.session.user.user_metadata?.full_name || '',
+           phone: data.session.user.user_metadata?.phone_number || '',
+           personnelCode: data.session.user.user_metadata?.personnel_code || 'ثبت نشده'
+         });
       }
     });
   }, []);
 
-  // ۲. دریافت تاریخچه و گوش دادن به تغییرات زنده (Real-time)
+  // ۲. دریافت تاریخچه و اتصال زنده
   const fetchMyHistory = async () => {
     if (!userId) return;
     try {
@@ -45,21 +67,52 @@ export const UploadPage: React.FC = () => {
 
   useEffect(() => {
     if (!userId) return;
-    
     fetchMyHistory();
 
-    // اتصال به کانال زنده سوپابیس برای آپدیت خودکار صفحه بعد از پردازش هوش مصنوعی
     const subscription = supabase.channel('custom-all-channel')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'submissions', filter: `observer_id=eq.${userId}` }, () => {
-        fetchMyHistory(); // بروزرسانی لیست با دریافت تغییرات
+        fetchMyHistory(); 
       })
       .subscribe();
 
-    return () => {
-      supabase.removeChannel(subscription);
-    };
+    return () => { supabase.removeChannel(subscription); };
   }, [userId]);
 
+  // آپدیت اطلاعات حساب کاربری
+  const handleUpdateProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsUpdatingProfile(true);
+    setProfileMsg({ type: '', text: '' });
+
+    try {
+      const updates: any = {
+        data: {
+          full_name: profileData.fullName,
+          phone_number: profileData.phone
+        }
+      };
+
+      if (newPassword) {
+        if (newPassword.length < 6) throw new Error('رمز عبور جدید باید حداقل ۶ کاراکتر باشد.');
+        updates.password = newPassword;
+      }
+
+      const { error } = await supabase.auth.updateUser(updates);
+      if (error) throw error;
+
+      setProfileMsg({ type: 'success', text: 'اطلاعات حساب با موفقیت بروزرسانی شد.' });
+      setNewPassword(''); // خالی کردن رمز بعد از موفقیت
+      
+      // پاک کردن پیام موفقیت بعد از ۳ ثانیه
+      setTimeout(() => setProfileMsg({ type: '', text: '' }), 3000);
+    } catch (err: any) {
+      setProfileMsg({ type: 'error', text: err.message });
+    } finally {
+      setIsUpdatingProfile(false);
+    }
+  };
+
+  // هندلرهای آپلود
   const handleDrag = useCallback((e: React.DragEvent) => {
     e.preventDefault(); e.stopPropagation();
     if (e.type === "dragenter" || e.type === "dragover") setDragActive(true);
@@ -101,7 +154,9 @@ export const UploadPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] font-sans selection:bg-indigo-200 pb-20 sm:pb-8" dir="rtl">
-      <header className="bg-white/80 backdrop-blur-xl border-b border-slate-200/60 sticky top-0 z-40 shadow-sm px-4">
+      
+      {/* هدر */}
+      <header className="bg-white/80 backdrop-blur-xl border-b border-slate-200/60 sticky top-0 z-30 shadow-sm px-4">
         <div className="max-w-4xl mx-auto h-16 sm:h-20 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="bg-indigo-600 p-2 rounded-xl shadow-lg shadow-indigo-200">
@@ -109,15 +164,104 @@ export const UploadPage: React.FC = () => {
             </div>
             <h1 className="text-base sm:text-lg font-black text-slate-800 tracking-tight">SocialPulse</h1>
           </div>
-          <button 
-            onClick={() => supabase.auth.signOut()} 
-            className="flex items-center gap-2 p-2 px-4 text-slate-500 bg-slate-100 rounded-xl hover:bg-red-50 hover:text-red-600 active:scale-95 transition-all"
-          >
-            <span className="text-sm font-bold hidden sm:block">خروج</span>
-            <LogOut className="w-5 h-5" />
-          </button>
+          
+          <div className="flex items-center gap-2 sm:gap-3">
+            <button 
+              onClick={() => setIsProfileOpen(true)} 
+              className="flex items-center gap-2 p-2 px-3 sm:px-4 text-indigo-600 bg-indigo-50 rounded-xl hover:bg-indigo-100 active:scale-95 transition-all border border-indigo-100"
+            >
+              <span className="text-sm font-bold hidden sm:block">حساب کاربری</span>
+              <User className="w-5 h-5" />
+            </button>
+            <button 
+              onClick={() => supabase.auth.signOut()} 
+              className="flex items-center gap-2 p-2 px-3 sm:px-4 text-slate-500 bg-white border border-slate-200 rounded-xl hover:bg-red-50 hover:text-red-600 hover:border-red-200 active:scale-95 transition-all"
+            >
+              <span className="text-sm font-bold hidden sm:block">خروج</span>
+              <LogOut className="w-5 h-5" />
+            </button>
+          </div>
         </div>
       </header>
+
+      {/* مدال (پاپ‌آپ) حساب کاربری */}
+      {isProfileOpen && (
+        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in">
+          <div className="bg-white rounded-[2rem] shadow-2xl w-full max-w-md overflow-hidden animate-slide-up">
+            <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+              <h2 className="text-lg font-black text-slate-800 flex items-center gap-2">
+                <User className="w-5 h-5 text-indigo-600" /> پروفایل من
+              </h2>
+              <button onClick={() => setIsProfileOpen(false)} className="p-2 text-slate-400 hover:text-slate-600 bg-white rounded-lg shadow-sm border border-slate-200 transition-all">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleUpdateProfile} className="p-6 space-y-5">
+              
+              {/* پیام خطا یا موفقیت */}
+              {profileMsg.text && (
+                <div className={`p-3 rounded-xl text-xs font-bold flex items-start gap-2 ${profileMsg.type === 'error' ? 'bg-red-50 text-red-600 border border-red-100' : 'bg-emerald-50 text-emerald-700 border border-emerald-100'}`}>
+                  {profileMsg.type === 'error' ? <AlertCircle className="w-4 h-4 shrink-0" /> : <CheckCircle2 className="w-4 h-4 shrink-0" />}
+                  {profileMsg.text}
+                </div>
+              )}
+
+              {/* فیلدهای قفل شده (Read-only) */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider ml-1">شناسه سازمانی (غیرقابل تغییر)</label>
+                  <div className="relative">
+                    <Hash className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                    <input type="text" value={profileData.personnelCode} disabled className="w-full bg-slate-100 border border-slate-200 text-slate-500 rounded-xl py-2.5 pr-9 pl-3 text-xs font-bold font-mono text-left cursor-not-allowed" dir="ltr" />
+                  </div>
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider ml-1">ایمیل (غیرقابل تغییر)</label>
+                  <div className="relative">
+                    <Mail className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                    <input type="text" value={profileData.email} disabled className="w-full bg-slate-100 border border-slate-200 text-slate-500 rounded-xl py-2.5 pr-9 pl-3 text-xs font-bold font-mono text-left cursor-not-allowed truncate" dir="ltr" />
+                  </div>
+                </div>
+              </div>
+
+              <hr className="border-slate-100 border-dashed" />
+
+              {/* فیلدهای قابل تغییر */}
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-extrabold text-slate-600 ml-1">نام و نام خانوادگی</label>
+                <div className="relative">
+                  <User className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <input type="text" value={profileData.fullName} onChange={e => setProfileData({...profileData, fullName: e.target.value})} className="w-full bg-white border border-slate-200 text-slate-800 rounded-xl py-3 pr-9 pl-3 text-sm focus:ring-2 focus:ring-indigo-500/50 outline-none transition-all" />
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-extrabold text-slate-600 ml-1">شماره تماس</label>
+                <div className="relative">
+                  <Phone className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <input type="tel" value={profileData.phone} onChange={e => setProfileData({...profileData, phone: e.target.value})} className="w-full bg-white border border-slate-200 text-slate-800 rounded-xl py-3 pr-9 pl-3 text-sm focus:ring-2 focus:ring-indigo-500/50 outline-none transition-all text-left" dir="ltr" />
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-extrabold text-slate-600 ml-1 flex justify-between">
+                  <span>رمز عبور جدید (اختیاری)</span>
+                  <span className="text-slate-400 font-normal">خالی بگذارید تا تغییر نکند</span>
+                </label>
+                <div className="relative">
+                  <Lock className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} placeholder="••••••" className="w-full bg-white border border-slate-200 text-slate-800 rounded-xl py-3 pr-9 pl-3 text-sm focus:ring-2 focus:ring-indigo-500/50 outline-none transition-all text-left" dir="ltr" />
+                </div>
+              </div>
+
+              <button type="submit" disabled={isUpdatingProfile} className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-indigo-600/20 transition-all flex items-center justify-center gap-2 mt-4 disabled:opacity-70">
+                {isUpdatingProfile ? <Loader2 className="w-5 h-5 animate-spin" /> : <><Save className="w-5 h-5" /> ذخیره تغییرات</>}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
 
       <main className="max-w-4xl mx-auto px-4 py-8 sm:py-12 space-y-12 animate-fade-in">
         
@@ -183,7 +327,7 @@ export const UploadPage: React.FC = () => {
         </section>
 
         {/* بخش تاریخچه کاربری */}
-        <section className="bg-white rounded-[2.5rem] border border-slate-200 shadow-sm p-6 sm:p-10">
+        <section className="bg-white rounded-[2.5rem] border border-slate-200 shadow-sm p-6 sm:p-10 relative z-10">
           <div className="flex items-center justify-between mb-8 border-b border-slate-100 pb-6">
              <div className="flex items-center gap-3">
                <div className="p-2.5 bg-indigo-50 text-indigo-600 rounded-xl">

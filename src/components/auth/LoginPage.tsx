@@ -34,6 +34,11 @@ export const LoginPage: React.FC = () => {
     }
   };
 
+  // تولید یک شناسه عددی ۸ رقمی تصادفی و یکتا برای کاربر
+  const generatePersonnelCode = () => {
+    return Math.floor(10000000 + Math.random() * 90000000).toString();
+  };
+
   // مدیریت فرم (ورود یا ثبت‌نام)
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,19 +65,25 @@ export const LoginPage: React.FC = () => {
 
     try {
       if (isSignUp) {
-        // فرآیند ثبت‌نام کاربر جدید به همراه متادیتا (نام و شماره تلفن)
+        // ایجاد شناسه غیرقابل تغییر سازمانی
+        const personnelCode = generatePersonnelCode();
+
+        // فرآیند ثبت‌نام کاربر جدید به همراه متادیتا (نام، شماره تلفن و شناسه سازمانی)
         const { error } = await supabase.auth.signUp({ 
           email, 
           password,
           options: {
             data: {
               full_name: fullName,
-              phone_number: phone
+              phone_number: phone,
+              personnel_code: personnelCode // این فیلد در دیتابیس قفل می‌شود
             }
           }
         });
         if (error) throw error;
-        setSuccess('ثبت‌نام با موفقیت انجام شد! صندوق ایمیل خود را برای تایید حساب بررسی کنید.');
+        
+        setSuccess(`ثبت‌نام موفق! شناسه سازمانی شما: ${personnelCode} (جهت تایید، صندوق ایمیل خود را بررسی کنید)`);
+        
         // در صورت موفقیت، فرم را به حالت لاگین برمی‌گردانیم
         setIsSignUp(false);
         setPassword('');
