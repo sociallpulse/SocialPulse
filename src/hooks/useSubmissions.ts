@@ -7,42 +7,55 @@ type Submission = Database['public']['Tables']['submissions']['Row'];
 export const useSubmissions = () => {
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [lastResult, setLastResult] = useState<Submission | null>(null);
+  const [progress, setProgress] = useState({ current: 0, total: 0 });
 
-  const uploadAndProcessImage = async (file: File, observerId: string) => {
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve((reader.result as string).split(',')[1]);
+      reader.onerror = (error) => reject(error);
+    });
+  };
+
+  const uploadAndProcessMultiple = async (files: File[], observerId: string) => {
     setIsUploading(true);
     setError(null);
-    setLastResult(null);
+    setProgress({ current: 0, total: files.length });
 
     try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${crypto.randomUUID()}.${fileExt}`;
-      const filePath = `${observerId}/${fileName}`;
+      for (let i = 0; i < files.length; i++) {
+        setProgress(prev => ({ ...prev, current: i + 1 }));
+        
+        const base64Data = await fileToBase64(files[i]);
+        
+        // ارسال مستقیم به دیتابیس با وضعیت pending جهت پردازش در پس‌زمینه
+        const { error: insertError } = await supabase
+          .from('submissions')
+          .insert([{
+            observer_id: observerId,
+            image_path: 'BKG_PROCESS', 
+            temp_image_data: base64Data, 
+            status: 'pending'
+          }]);
 
-      const { error: uploadError } = await supabase.storage
-        .from('screenshots')
-        .upload(filePath, file, { cacheControl: '3600', upsert: false });
-
-      if (uploadError) throw new Error(`خطا در آپلود: ${uploadError.message}`);
-
-      const { data, error: functionError } = await supabase.functions.invoke('process-image', {
-        body: { image_path: filePath, observer_id: observerId }
-      });
-
-      if (functionError) throw new Error(`خطای سرور هوش مصنوعی: ${functionError.message}`);
-      if (!data?.success) throw new Error(data?.error || 'خطای ناشناخته در پردازش تصویر');
-
-      setLastResult(data.data as Submission);
-      return data.data;
-
+        if (insertError) throw insertError;
+      }
+      
+      return true;
     } catch (err: any) {
-      console.error('Upload Process Error:', err);
-      setError(err.message || 'خطایی در سیستم رخ داده است.');
-      return null;
+      console.error('Upload Error:', err);
+      setError('خطا در ثبت تصاویر. لطفاً دوباره تلاش کنید.');
+      return false;
     } finally {
       setIsUploading(false);
     }
   };
 
-  return { uploadAndProcessImage, isUploading, error, lastResult };
+  return { 
+    uploadAndProcessMultiple,
+    isUploading, 
+    error, 
+    progress 
+  };
 };

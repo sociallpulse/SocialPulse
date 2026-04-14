@@ -63,10 +63,12 @@ export interface Database {
           id: string
           observer_id: string | null
           profile_id: string | null
-          image_path: string
+          image_path: string | null
           extracted_text: string | null
           ai_category: string | null
           summary: string | null
+          status: 'pending' | 'processing' | 'completed' | 'failed' | null
+          temp_image_data: string | null
           metadata: Json | null
           created_at: string | null
         }
@@ -74,10 +76,12 @@ export interface Database {
           id?: string
           observer_id?: string | null
           profile_id?: string | null
-          image_path: string
+          image_path?: string | null
           extracted_text?: string | null
           ai_category?: string | null
           summary?: string | null
+          status?: 'pending' | 'processing' | 'completed' | 'failed' | null
+          temp_image_data?: string | null
           metadata?: Json | null
           created_at?: string | null
         }
@@ -85,10 +89,12 @@ export interface Database {
           id?: string
           observer_id?: string | null
           profile_id?: string | null
-          image_path?: string
+          image_path?: string | null
           extracted_text?: string | null
           ai_category?: string | null
           summary?: string | null
+          status?: 'pending' | 'processing' | 'completed' | 'failed' | null
+          temp_image_data?: string | null
           metadata?: Json | null
           created_at?: string | null
         }
@@ -116,6 +122,18 @@ export interface Database {
           analysis_date?: string | null
         }
       }
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      is_admin: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
+    }
+    Enums: {
+      [_ in never]: never
     }
   }
 }

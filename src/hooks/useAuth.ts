@@ -8,7 +8,6 @@ export const useAuth = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // بررسی وضعیت نشست فعلی هنگام بارگذاری اولیه
     supabase.auth.getSession().then(({ data: { session } }) => {
       const currentUser = session?.user ?? null;
       setUser(currentUser);
@@ -19,7 +18,6 @@ export const useAuth = () => {
       }
     });
 
-    // گوش دادن به تغییرات وضعیت احراز هویت (Login/Logout)
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       const currentUser = session?.user ?? null;
       setUser(currentUser);
@@ -36,7 +34,6 @@ export const useAuth = () => {
 
   const checkUserRole = async (currentUser: User) => {
     try {
-      // منطق ویژه برای "ورود سریع" (فقط برای فاز توسعه و تست)
       if (currentUser.is_anonymous) {
         const testRole = localStorage.getItem('test_role') as 'admin' | 'observer';
         setRole(testRole || 'observer');
@@ -44,19 +41,17 @@ export const useAuth = () => {
         return;
       }
 
-      // منطق ورود رسمی (جستجو در دیتابیس)
       const { data, error } = await supabase
         .from('user_roles')
         .select('role')
         .eq('user_id', currentUser.id)
         .single();
 
-      // استفاده از casting به any برای عبور از محدودیت تایپ‌اسکریپت در زمان بیلد
       if (data && !error) {
-        const userRole = (data as any).role;
-        setRole(userRole as 'admin' | 'observer');
+        // تایپ‌اسکریپت حالا به کمک فایل database.types.ts مقادیر را می‌شناسد و نیازی به any نیست
+        setRole(data.role);
       } else {
-        setRole('observer'); // نقش پیش‌فرض در صورت نبود رکورد یا خطا
+        setRole('observer'); 
       }
     } catch (err) {
       console.error("Error fetching user role:", err);
