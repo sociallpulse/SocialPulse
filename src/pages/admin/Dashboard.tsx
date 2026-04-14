@@ -46,9 +46,6 @@ export const AdminDashboard: React.FC = () => {
       const { count: pCount } = await supabase.from('instagram_profiles').select('*', { count: 'exact', head: true });
       const { count: sCount } = await supabase.from('submissions').select('*', { count: 'exact', head: true });
       
-      // رفع مشکل احتمالی RLS با اجرای کوئری فقط در صورت ادمین بودن، یا تکیه بر کوئری امن‌تر
-      const { count: uCount } = await supabase.from('user_roles').select('*', { count: 'exact', head: true });
-      
       setStats(prev => ({ 
         ...prev,
         profiles: pCount || 0, 
