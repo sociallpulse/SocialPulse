@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { supabase } from '../../lib/supabase';
-import { Loader2, Mail, Lock, Shield, Activity, Fingerprint, ScanLine, Eye, EyeOff, UserPlus, LogIn, KeyRound, CheckCircle2 } from 'lucide-react';
+import { Loader2, Mail, Lock, Shield, Activity, Fingerprint, Eye, EyeOff, UserPlus, LogIn, KeyRound, CheckCircle2 } from 'lucide-react';
 
 export const LoginPage: React.FC = () => {
   const [isSignUp, setIsSignUp] = useState(false);
