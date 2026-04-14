@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { supabase } from '../../lib/supabase';
-import { Loader2, Mail, Lock, Shield, Activity, Fingerprint, ScanLine, LayoutDashboard, Eye, EyeOff, UserPlus, LogIn, KeyRound, CheckCircle2 } from 'lucide-react';
+import { Loader2, Mail, Lock, Shield, Activity, Fingerprint, ScanLine, Eye, EyeOff, UserPlus, LogIn, KeyRound, CheckCircle2 } from 'lucide-react';
 
 export const LoginPage: React.FC = () => {
   const [isSignUp, setIsSignUp] = useState(false);
@@ -79,21 +79,6 @@ export const LoginPage: React.FC = () => {
       setSuccess('لینک بازیابی رمز عبور با موفقیت به ایمیل شما ارسال شد.');
     } catch (err: any) {
       setError(translateError(err.message));
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // ورود سریع (برای محیط توسعه و تست)
-  const handleQuickLogin = async (role: 'admin' | 'observer') => {
-    setLoading(true);
-    setError(null);
-    try {
-      localStorage.setItem('test_role', role);
-      const { error } = await supabase.auth.signInAnonymously();
-      if (error) throw error;
-    } catch (err: any) {
-      setError('خطا در ارتباط با سرور توسعه.');
     } finally {
       setLoading(false);
     }
@@ -233,35 +218,6 @@ export const LoginPage: React.FC = () => {
             </button>
           </form>
 
-          {/* بخش دسترسی توسعه (Developer Mode) */}
-          <div className="relative mt-10 mb-6 flex items-center opacity-60 hover:opacity-100 transition-opacity">
-            <div className="flex-grow border-t border-slate-200 border-dashed"></div>
-            <span className="flex-shrink-0 mx-4 text-slate-400 text-[10px] font-bold uppercase tracking-wider">محیط تست و توسعه</span>
-            <div className="flex-grow border-t border-slate-200 border-dashed"></div>
-          </div>
-
-          <div className="flex gap-3">
-            <button
-              onClick={() => handleQuickLogin('admin')}
-              type="button"
-              disabled={loading}
-              className="flex-1 flex flex-col items-center justify-center gap-2 py-3 px-2 rounded-2xl text-indigo-700 font-bold bg-indigo-50 hover:bg-indigo-100 border border-indigo-100 transition-all group disabled:opacity-50"
-            >
-              <LayoutDashboard className="w-5 h-5 text-indigo-500 group-hover:-translate-y-0.5 transition-transform" />
-              <span className="text-[10px] uppercase">پنل مدیریت</span>
-            </button>
-
-            <button
-              onClick={() => handleQuickLogin('observer')}
-              type="button"
-              disabled={loading}
-              className="flex-1 flex flex-col items-center justify-center gap-2 py-3 px-2 rounded-2xl text-emerald-700 font-bold bg-emerald-50 hover:bg-emerald-100 border border-emerald-100 transition-all group disabled:opacity-50"
-            >
-              <ScanLine className="w-5 h-5 text-emerald-500 group-hover:-translate-y-0.5 transition-transform" />
-              <span className="text-[10px] uppercase">پنل رصدگر</span>
-            </button>
-          </div>
-          
         </div>
 
         {/* فوتر کپی‌رایت / لاگ‌سیس */}
