@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { supabase } from '../../lib/supabase';
-import { Loader2, Mail, Lock, Shield, Activity, Fingerprint, Eye, EyeOff, UserPlus, LogIn, KeyRound, CheckCircle2 } from 'lucide-react';
+import { Loader2, Mail, Lock, Shield, Activity, Fingerprint, Eye, EyeOff, UserPlus, LogIn, KeyRound, CheckCircle2, User, Phone } from 'lucide-react';
 
 export const LoginPage: React.FC = () => {
   const [isSignUp, setIsSignUp] = useState(false);
+  const [fullName, setFullName] = useState('');
+  const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -21,6 +23,17 @@ export const LoginPage: React.FC = () => {
     return 'خطای سیستمی رخ داده است. لطفاً دوباره تلاش کنید.';
   };
 
+  // تغییر حالت فرم و پاکسازی داده‌ها
+  const toggleMode = (signupMode: boolean) => {
+    setIsSignUp(signupMode);
+    setError(null);
+    setSuccess(null);
+    if (!signupMode) {
+      setFullName('');
+      setPhone('');
+    }
+  };
+
   // مدیریت فرم (ورود یا ثبت‌نام)
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,7 +41,7 @@ export const LoginPage: React.FC = () => {
     setError(null);
     setSuccess(null);
 
-    // اعتبارسنجی اولیه فرم
+    // اعتبارسنجی فرم
     if (!email || !password) {
       setError('لطفاً ایمیل و رمز عبور را به درستی وارد کنید.');
       setLoading(false);
@@ -39,19 +52,32 @@ export const LoginPage: React.FC = () => {
       setLoading(false);
       return;
     }
+    if (isSignUp && (!fullName.trim() || !phone.trim())) {
+      setError('لطفاً نام کامل و شماره تماس سازمانی خود را وارد کنید.');
+      setLoading(false);
+      return;
+    }
 
     try {
       if (isSignUp) {
-        // فرآیند ثبت‌نام کاربر جدید
+        // فرآیند ثبت‌نام کاربر جدید به همراه متادیتا (نام و شماره تلفن)
         const { error } = await supabase.auth.signUp({ 
           email, 
-          password 
+          password,
+          options: {
+            data: {
+              full_name: fullName,
+              phone_number: phone
+            }
+          }
         });
         if (error) throw error;
         setSuccess('ثبت‌نام با موفقیت انجام شد! صندوق ایمیل خود را برای تایید حساب بررسی کنید.');
-        // در صورت موفقیت، فرم را خالی کرده و به حالت لاگین برمی‌گردانیم
+        // در صورت موفقیت، فرم را به حالت لاگین برمی‌گردانیم
         setIsSignUp(false);
         setPassword('');
+        setFullName('');
+        setPhone('');
       } else {
         // فرآیند ورود کاربر موجود
         const { error } = await supabase.auth.signInWithPassword({ email, password });
@@ -113,7 +139,7 @@ export const LoginPage: React.FC = () => {
           <div className="flex bg-slate-100/80 p-1 rounded-2xl mb-8 border border-slate-200/50">
             <button
               type="button"
-              onClick={() => { setIsSignUp(false); setError(null); setSuccess(null); }}
+              onClick={() => toggleMode(false)}
               className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold transition-all ${
                 !isSignUp ? 'bg-white text-indigo-600 shadow-sm shadow-slate-200/50' : 'text-slate-500 hover:text-slate-700'
               }`}
@@ -122,7 +148,7 @@ export const LoginPage: React.FC = () => {
             </button>
             <button
               type="button"
-              onClick={() => { setIsSignUp(true); setError(null); setSuccess(null); }}
+              onClick={() => toggleMode(true)}
               className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold transition-all ${
                 isSignUp ? 'bg-white text-indigo-600 shadow-sm shadow-slate-200/50' : 'text-slate-500 hover:text-slate-700'
               }`}
@@ -148,6 +174,47 @@ export const LoginPage: React.FC = () => {
 
           {/* فرم اصلی */}
           <form onSubmit={handleAuth} className="space-y-5">
+            
+            {/* فیلدهای اختصاصی ثبت‌نام */}
+            {isSignUp && (
+              <>
+                <div className="space-y-2 animate-fade-in">
+                  <label className="text-[11px] font-extrabold text-slate-500 uppercase tracking-wider ml-1">نام و نام خانوادگی</label>
+                  <div className="relative group">
+                    <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-indigo-600 transition-colors">
+                      <User className="w-5 h-5" />
+                    </div>
+                    <input
+                      type="text"
+                      required={isSignUp}
+                      value={fullName}
+                      onChange={(e) => setFullName(e.target.value)}
+                      className="block w-full bg-slate-50 border border-slate-200 text-slate-900 rounded-2xl py-3.5 pr-12 pl-4 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 focus:bg-white transition-all text-left outline-none font-medium placeholder:text-slate-400 text-sm text-right"
+                      placeholder="مثال: علی احمدی"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2 animate-fade-in">
+                  <label className="text-[11px] font-extrabold text-slate-500 uppercase tracking-wider ml-1">شماره تماس</label>
+                  <div className="relative group">
+                    <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-indigo-600 transition-colors">
+                      <Phone className="w-5 h-5" />
+                    </div>
+                    <input
+                      type="tel"
+                      required={isSignUp}
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      className="block w-full bg-slate-50 border border-slate-200 text-slate-900 rounded-2xl py-3.5 pr-12 pl-4 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 focus:bg-white transition-all text-left outline-none font-medium placeholder:text-slate-400 text-sm"
+                      placeholder="09123456789"
+                      dir="ltr"
+                    />
+                  </div>
+                </div>
+              </>
+            )}
+
             <div className="space-y-2">
               <label className="text-[11px] font-extrabold text-slate-500 uppercase tracking-wider ml-1">پست الکترونیک سازمانی</label>
               <div className="relative group">
